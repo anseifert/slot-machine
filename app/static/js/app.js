@@ -26,12 +26,11 @@
   let resultMessage;
   let resultClose;
 
-  const REEL_SPIN_ITEMS = 24;
+  const REEL_SPIN_ITEMS = 18;
+  const SPIN_MAX_MS = 5000;
   const SPIN_TIMING = {
-    minSpinMs: 2200,
-    reelStopBaseMs: 900,
-    reelStopStaggerMs: 500,
-    reelLandMs: 2200,
+    minSpinMs: 500,
+    reelLandMs: 900,
   };
   let hasSpun = false;
   let isSpinning = false;
@@ -163,7 +162,14 @@
     reel.appendChild(strip);
   }
 
-  function spinReelTo(reel, finalSymbol, stopDelayMs) {
+  function getAnimationPlan(maxAnimMs, reelCount) {
+    const landMs = Math.max(450, Math.min(SPIN_TIMING.reelLandMs, Math.floor(maxAnimMs * 0.52)));
+    const stopWindow = Math.max(0, maxAnimMs - landMs);
+    const staggerMs = reelCount > 1 ? stopWindow / (reelCount - 1) : 0;
+    return { landMs, staggerMs };
+  }
+
+  function spinReelTo(reel, finalSymbol, stopDelayMs, landMs) {
     return new Promise((resolve) => {
       window.setTimeout(() => {
         const strip = buildSpinStrip(finalSymbol);
@@ -178,7 +184,7 @@
         strip.style.transform = "translate3d(0, 0, 0)";
 
         requestAnimationFrame(() => {
-          strip.style.transition = `transform ${SPIN_TIMING.reelLandMs}ms cubic-bezier(0.12, 0.85, 0.22, 1)`;
+          strip.style.transition = `transform ${landMs}ms cubic-bezier(0.15, 0.85, 0.25, 1)`;
           strip.style.transform = `translate3d(0, -${finalOffset}px, 0)`;
         });
 
@@ -193,21 +199,34 @@
         };
 
         strip.addEventListener("transitionend", finish, { once: true });
-        window.setTimeout(finish, SPIN_TIMING.reelLandMs + 250);
+        window.setTimeout(finish, landMs + 150);
       }, stopDelayMs);
     });
   }
 
-  async function animateReels(finalReels) {
+  async function animateReels(finalReels, maxAnimMs) {
     const reels = [...document.querySelectorAll(".reel")];
+    const { landMs, staggerMs } = getAnimationPlan(maxAnimMs, reels.length);
     const tasks = reels.map(
-      (reel, index) => spinReelTo(
-        reel,
-        finalReels[index],
-        SPIN_TIMING.reelStopBaseMs + index * SPIN_TIMING.reelStopStaggerMs,
-      ),
+      (reel, index) => spinReelTo(reel, finalReels[index], index * staggerMs, landMs),
     );
     await Promise.all(tasks);
+  }
+
+  async function waitForSpinBudget(spinStartedAt) {
+    const elapsed = Date.now() - spinStartedAt;
+    const remaining = SPIN_MAX_MS - elapsed;
+
+    if (remaining <= 700) {
+      return remaining;
+    }
+
+    const preSpinWait = Math.min(SPIN_TIMING.minSpinMs, remaining - 2200);
+    if (preSpinWait > 0) {
+      await wait(preSpinWait);
+    }
+
+    return Math.max(600, SPIN_MAX_MS - (Date.now() - spinStartedAt));
   }
 
   function showResult(message, isWinner) {
@@ -257,12 +276,8 @@
         throw new Error(detail);
       }
 
-      const elapsed = Date.now() - spinStartedAt;
-      if (elapsed < SPIN_TIMING.minSpinMs) {
-        await wait(SPIN_TIMING.minSpinMs - elapsed);
-      }
-
-      await animateReels(data.reels);
+      const animBudget = await waitForSpinBudget(spinStartedAt);
+      await animateReels(data.reels, animBudget);
       showResult(data.message, data.is_winner);
 
       hasSpun = !data.is_test;
