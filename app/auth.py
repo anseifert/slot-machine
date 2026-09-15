@@ -1,3 +1,4 @@
+from fastapi import Request
 from itsdangerous import BadSignature, URLSafeSerializer
 
 from app.config import get_settings
@@ -30,7 +31,7 @@ def verify_credentials(username: str, password: str) -> bool:
     return username == settings.admin_username and password == settings.admin_password
 
 
-def require_admin(request) -> str:
+def require_admin(request: Request) -> str:
     token = request.cookies.get(SESSION_COOKIE)
     if not token:
         raise AdminLoginRequired()
