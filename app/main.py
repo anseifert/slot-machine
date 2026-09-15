@@ -7,7 +7,13 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.auth import SESSION_COOKIE, create_session_token, require_admin, verify_credentials
+from app.auth import (
+    SESSION_COOKIE,
+    AdminLoginRequired,
+    create_session_token,
+    require_admin,
+    verify_credentials,
+)
 from app.config import get_settings
 from app.database import get_db, init_db, migrate_db
 from app.game import FILLER_SYMBOLS, PRIZE_SYMBOLS
@@ -20,6 +26,11 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 app = FastAPI(title="Red Hat Casino")
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+
+
+@app.exception_handler(AdminLoginRequired)
+def admin_login_required_handler(_request: Request, _exc: AdminLoginRequired) -> RedirectResponse:
+    return RedirectResponse(url="/admin/login", status_code=303)
 
 
 @app.on_event("startup")
@@ -51,6 +62,11 @@ def api_spin(payload: SpinRequest, db: Session = Depends(get_db)) -> dict:
     except SpinError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
     return result.model_dump()
+
+
+@app.get("/admin")
+def admin_root() -> RedirectResponse:
+    return RedirectResponse(url="/admin/stats", status_code=303)
 
 
 @app.get("/admin/login", response_class=HTMLResponse)

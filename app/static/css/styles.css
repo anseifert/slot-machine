@@ -501,6 +501,12 @@ body:has(.vegas-floor) {
   color: var(--rh-red-dark);
 }
 
+body:has(.admin-page) {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(238, 0, 0, 0.2), transparent 28%),
+    linear-gradient(180deg, #f8f8f8 0%, #ffffff 50%, var(--rh-red-lightest) 100%);
+}
+
 .admin-page {
   min-height: 100vh;
   display: grid;

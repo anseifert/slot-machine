@@ -8,7 +8,7 @@
     {% if error %}
     <div class="alert alert--error">{{ error }}</div>
     {% endif %}
-    <form method="post" class="player-form">
+    <form method="post" action="/admin/login" class="player-form">
       <label>
         <span>Username</span>
         <input name="username" type="text" required autocomplete="username">

@@ -1,9 +1,12 @@
-from fastapi import HTTPException, Request, status
 from itsdangerous import BadSignature, URLSafeSerializer
 
 from app.config import get_settings
 
 SESSION_COOKIE = "rh_casino_session"
+
+
+class AdminLoginRequired(Exception):
+    """Raised when admin routes are accessed without a valid session."""
 
 
 def _serializer() -> URLSafeSerializer:
@@ -27,17 +30,11 @@ def verify_credentials(username: str, password: str) -> bool:
     return username == settings.admin_username and password == settings.admin_password
 
 
-def require_admin(request: Request) -> str:
+def require_admin(request) -> str:
     token = request.cookies.get(SESSION_COOKIE)
     if not token:
-        raise HTTPException(
-            status_code=status.HTTP_303_SEE_OTHER,
-            headers={"Location": "/admin/login"},
-        )
+        raise AdminLoginRequired()
     username = read_session_token(token)
     if not username:
-        raise HTTPException(
-            status_code=status.HTTP_303_SEE_OTHER,
-            headers={"Location": "/admin/login"},
-        )
+        raise AdminLoginRequired()
     return username
