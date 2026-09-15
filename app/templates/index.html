@@ -2,21 +2,16 @@
 {% block title %}Red Hat Casino{% endblock %}
 {% block body %}
 <div class="page">
-  <header class="header">
-    <div class="header__brand">
-      <span class="header__logo" aria-hidden="true"></span>
-      <h1>Red Hat Casino</h1>
-    </div>
-    <p class="header__tagline">Spin the reels for a chance to win exclusive prizes</p>
-  </header>
-
   <main class="casino">
     <section class="machine" aria-label="Slot machine">
       <div class="machine__top">
+        <div class="header__brand">
+          <span class="header__logo" aria-hidden="true"></span>
+          <h1>Red Hat Casino</h1>
+        </div>
         <div class="machine__lights" aria-hidden="true">
           <span></span><span></span><span></span><span></span><span></span>
         </div>
-        <p class="machine__jackpot">Grand Prizes Available</p>
       </div>
 
       <div class="machine__window">
@@ -32,66 +27,29 @@
       </div>
 
       <div class="machine__controls">
-        <button class="btn btn--primary" id="spin-btn" type="button" disabled>Pull to Spin</button>
-        <p class="machine__odds">Prize odds: 30 in 700 per spin</p>
+        <form id="player-form" class="player-form">
+          <h2 class="player-form__title">Enter to play</h2>
+          <p class="player-form__subtitle">One spin per email address.</p>
+          <div class="player-form__fields">
+            <label>
+              <span>First name</span>
+              <input name="first_name" type="text" required autocomplete="given-name">
+            </label>
+            <label>
+              <span>Last name</span>
+              <input name="last_name" type="text" required autocomplete="family-name">
+            </label>
+            <label>
+              <span>Email</span>
+              <input name="email" type="email" required autocomplete="email">
+            </label>
+          </div>
+          <p class="form-error" id="form-error" hidden></p>
+          <button class="btn btn--primary" id="spin-btn" type="submit" disabled>Pull to Spin</button>
+        </form>
       </div>
     </section>
-
-    <aside class="prize-board">
-      <h2>Prizes</h2>
-      <div class="prize-cards">
-        <div class="prize-card prize-card--golf">
-          <div class="prize-card__icon" data-symbol="golf_ball"></div>
-          <div>
-            <h3>Golf Ball</h3>
-            <p>Limited to {{ golf_max }} winners</p>
-          </div>
-        </div>
-        <div class="prize-card prize-card--hat">
-          <div class="prize-card__icon" data-symbol="hat"></div>
-          <div>
-            <h3>Red Hat</h3>
-            <p>Limited to {{ hat_max }} winners</p>
-          </div>
-        </div>
-      </div>
-      <div class="symbol-legend">
-        <h3>Reel Icons</h3>
-        <div class="symbol-legend__grid">
-          {% for symbol in symbols %}
-          <div class="symbol-legend__item">
-            <span class="symbol-legend__icon" data-symbol="{{ symbol }}"></span>
-            <span>{{ symbol.replace('_', ' ').title() }}</span>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </aside>
   </main>
-
-  <div class="modal" id="player-modal" hidden>
-    <div class="modal__backdrop"></div>
-    <div class="modal__panel" role="dialog" aria-labelledby="modal-title" aria-modal="true">
-      <h2 id="modal-title">Enter to Play</h2>
-      <p class="modal__subtitle">One spin per email address. Fill out the form to unlock the reels.</p>
-      <form id="player-form" class="player-form">
-        <label>
-          <span>First name</span>
-          <input name="first_name" type="text" required autocomplete="given-name">
-        </label>
-        <label>
-          <span>Last name</span>
-          <input name="last_name" type="text" required autocomplete="family-name">
-        </label>
-        <label>
-          <span>Email</span>
-          <input name="email" type="email" required autocomplete="email">
-        </label>
-        <p class="form-error" id="form-error" hidden></p>
-        <button class="btn btn--primary" type="submit">Start Playing</button>
-      </form>
-    </div>
-  </div>
 
   <div class="result-banner" id="result-banner" hidden>
     <div class="result-banner__content">

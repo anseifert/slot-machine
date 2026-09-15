@@ -38,20 +38,17 @@ body {
 }
 
 .page {
-  max-width: 1180px;
+  max-width: 720px;
   margin: 0 auto;
   padding: 2rem 1.25rem 3rem;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 2rem;
 }
 
 .header__brand {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.85rem;
+  margin-bottom: 0.75rem;
 }
 
 .header__logo {
@@ -62,26 +59,20 @@ body {
   box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.12);
 }
 
-.header h1 {
+.machine__top h1 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
   color: var(--rh-red);
   letter-spacing: 0.02em;
 }
 
-.header__tagline {
-  margin: 0.75rem 0 0;
-  color: var(--rh-gray-50);
-  font-size: 1.05rem;
-}
-
 .casino {
   display: grid;
-  grid-template-columns: 1.4fr 0.9fr;
-  gap: 1.5rem;
+  place-items: center;
 }
 
 .machine {
+  width: 100%;
   background: linear-gradient(180deg, var(--rh-white), var(--rh-red-lightest));
   border: 3px solid var(--rh-red-light);
   border-radius: calc(var(--radius) + 8px);
@@ -118,14 +109,6 @@ body {
 @keyframes blink {
   0%, 100% { opacity: 0.45; transform: scale(0.92); }
   50% { opacity: 1; transform: scale(1); }
-}
-
-.machine__jackpot {
-  margin: 0;
-  font-weight: 700;
-  color: var(--rh-red-dark);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .machine__window {
@@ -166,9 +149,7 @@ body {
   to { transform: translateY(-88px); }
 }
 
-.reel__symbol,
-.symbol-legend__icon,
-.prize-card__icon {
+.reel__symbol {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -176,22 +157,13 @@ body {
   padding: 0.5rem;
 }
 
-.reel__symbol svg,
-.symbol-legend__icon svg,
-.prize-card__icon svg {
+.reel__symbol svg {
   width: 64px;
   height: 64px;
 }
 
 .machine__controls {
   margin-top: 1.25rem;
-  text-align: center;
-}
-
-.machine__odds {
-  margin: 0.75rem 0 0;
-  color: var(--rh-gray-50);
-  font-size: 0.92rem;
 }
 
 .btn {
@@ -225,117 +197,33 @@ body {
   border: 2px solid var(--rh-red-lighter);
 }
 
-.prize-board {
-  background: rgba(255, 255, 255, 0.88);
-  border: 2px solid var(--rh-red-pale);
-  border-radius: var(--radius);
-  padding: 1.25rem;
-  box-shadow: var(--shadow);
-}
-
-.prize-board h2,
-.symbol-legend h3 {
-  margin-top: 0;
-  color: var(--rh-red-dark);
-}
-
-.prize-cards {
+.player-form {
   display: grid;
-  gap: 0.85rem;
-  margin-bottom: 1.25rem;
+  gap: 0.9rem;
+  padding: 1.1rem;
+  border-radius: var(--radius);
+  background: var(--rh-white);
+  border: 2px solid var(--rh-red-pale);
 }
 
-.prize-card {
-  display: flex;
-  gap: 0.85rem;
-  align-items: center;
-  padding: 0.85rem;
-  border-radius: 14px;
-  border: 2px solid transparent;
-}
-
-.prize-card--golf {
-  background: var(--rh-teal-light);
-  border-color: var(--rh-teal);
-}
-
-.prize-card--hat {
-  background: var(--rh-red-pale);
-  border-color: var(--rh-red-light);
-}
-
-.prize-card h3 {
-  margin: 0 0 0.2rem;
-}
-
-.prize-card p {
+.player-form__title {
   margin: 0;
+  text-align: center;
+  color: var(--rh-red-dark);
+  font-size: 1.15rem;
+}
+
+.player-form__subtitle {
+  margin: 0;
+  text-align: center;
   color: var(--rh-gray-50);
   font-size: 0.92rem;
 }
 
-.symbol-legend__grid {
+.player-form__fields {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
-}
-
-.symbol-legend__item {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.45rem 0.55rem;
-  border-radius: 12px;
-  background: var(--rh-gray-10);
-  font-size: 0.88rem;
-}
-
-.symbol-legend__icon {
-  min-height: auto;
-  padding: 0;
-}
-
-.symbol-legend__icon svg {
-  width: 34px;
-  height: 34px;
-}
-
-.modal {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  z-index: 20;
-}
-
-.modal[hidden] {
-  display: none;
-}
-
-.modal__backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(4px);
-}
-
-.modal__panel {
-  position: relative;
-  width: min(100% - 2rem, 420px);
-  background: var(--rh-white);
-  border: 2px solid var(--rh-red-lighter);
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  box-shadow: var(--shadow);
-}
-
-.modal__subtitle {
-  color: var(--rh-gray-50);
-}
-
-.player-form {
-  display: grid;
-  gap: 0.9rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 
 .player-form label {
@@ -530,10 +418,6 @@ body {
 }
 
 @media (max-width: 900px) {
-  .casino {
-    grid-template-columns: 1fr;
-  }
-
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -551,6 +435,10 @@ body {
   .reel__symbol svg {
     width: 48px;
     height: 48px;
+  }
+
+  .player-form__fields {
+    grid-template-columns: 1fr;
   }
 
   .stats-grid {

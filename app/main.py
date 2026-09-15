@@ -34,14 +34,11 @@ def health() -> dict[str, str]:
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request) -> HTMLResponse:
-    settings = get_settings()
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
             "symbols": PRIZE_SYMBOLS + FILLER_SYMBOLS,
-            "golf_max": settings.golf_ball_max,
-            "hat_max": settings.hat_max,
         },
     )
 

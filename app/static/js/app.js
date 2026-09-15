@@ -1,7 +1,6 @@
 const symbols = window.SLOT_SYMBOLS || [];
 const { hydrateSymbolElements, renderSymbol } = window.SlotIcons;
 
-const modal = document.getElementById("player-modal");
 const playerForm = document.getElementById("player-form");
 const formError = document.getElementById("form-error");
 const spinBtn = document.getElementById("spin-btn");
@@ -9,20 +8,29 @@ const resultBanner = document.getElementById("result-banner");
 const resultMessage = document.getElementById("result-message");
 const resultClose = document.getElementById("result-close");
 
-let player = null;
 let hasSpun = false;
-
-function showModal() {
-  modal.hidden = false;
-}
-
-function hideModal() {
-  modal.hidden = true;
-}
 
 function showError(message) {
   formError.textContent = message;
   formError.hidden = !message;
+}
+
+function getPlayerFromForm() {
+  const formData = new FormData(playerForm);
+  return {
+    first_name: formData.get("first_name").trim(),
+    last_name: formData.get("last_name").trim(),
+    email: formData.get("email").trim().toLowerCase(),
+  };
+}
+
+function isFormComplete() {
+  const player = getPlayerFromForm();
+  return Boolean(player.first_name && player.last_name && player.email);
+}
+
+function updateSpinButton() {
+  spinBtn.disabled = hasSpun || !isFormComplete();
 }
 
 function buildReelStrip(finalSymbol) {
@@ -66,26 +74,18 @@ function showResult(message, isWinner) {
   resultBanner.hidden = false;
 }
 
-playerForm.addEventListener("submit", (event) => {
-  event.preventDefault();
+playerForm.addEventListener("input", () => {
   showError("");
-
-  const formData = new FormData(playerForm);
-  player = {
-    first_name: formData.get("first_name").trim(),
-    last_name: formData.get("last_name").trim(),
-    email: formData.get("email").trim().toLowerCase(),
-  };
-
-  hideModal();
-  spinBtn.disabled = false;
+  updateSpinButton();
 });
 
-spinBtn.addEventListener("click", async () => {
-  if (!player || hasSpun) {
+playerForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (hasSpun || !isFormComplete()) {
     return;
   }
 
+  const player = getPlayerFromForm();
   spinBtn.disabled = true;
   showError("");
 
@@ -104,10 +104,12 @@ spinBtn.addEventListener("click", async () => {
     await animateReels(data.reels);
     showResult(data.message, data.is_winner);
     hasSpun = true;
+    playerForm.querySelectorAll("input").forEach((input) => {
+      input.disabled = true;
+    });
   } catch (error) {
-    spinBtn.disabled = false;
-    showModal();
     showError(error.message);
+    updateSpinButton();
   }
 });
 
@@ -121,5 +123,5 @@ document.addEventListener("DOMContentLoaded", () => {
     reel.innerHTML = "";
     reel.appendChild(buildReelStrip("rhel"));
   });
-  showModal();
+  updateSpinButton();
 });
