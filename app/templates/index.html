@@ -1,54 +1,75 @@
 {% extends "base.html" %}
 {% block title %}Red Hat Casino{% endblock %}
 {% block body %}
-<div class="page">
-  <main class="casino">
-    <section class="machine" aria-label="Slot machine">
-      <div class="machine__top">
-        <div class="header__brand">
-          <span class="header__logo" aria-hidden="true"></span>
-          <h1>Red Hat Casino</h1>
-        </div>
-        <div class="machine__lights" aria-hidden="true">
-          <span></span><span></span><span></span><span></span><span></span>
-        </div>
+<div class="vegas-floor">
+  <div class="slot-cabinet">
+    <div class="slot-cabinet__top" aria-hidden="true">
+      <div class="slot-cabinet__bulb-row">
+        {% for i in range(12) %}<span class="slot-cabinet__bulb"></span>{% endfor %}
       </div>
+      <div class="slot-cabinet__sign">
+        <span class="slot-cabinet__sign-glow">Red Hat Casino</span>
+      </div>
+      <div class="slot-cabinet__bulb-row slot-cabinet__bulb-row--reverse">
+        {% for i in range(12) %}<span class="slot-cabinet__bulb"></span>{% endfor %}
+      </div>
+    </div>
 
-      <div class="machine__window">
-        <div class="reels" id="reels">
-          {% for i in range(5) %}
-          <div class="reel" data-reel="{{ i }}">
-            <div class="reel__strip">
-              <div class="reel__symbol" data-symbol="golf_ball"></div>
+    <div class="slot-cabinet__body">
+      <div class="slot-cabinet__side slot-cabinet__side--left" aria-hidden="true"></div>
+
+      <section class="machine" aria-label="Slot machine">
+        <div class="machine__top">
+          <div class="machine__marquee">JACKPOT</div>
+          <div class="machine__lights" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="machine__window">
+          <div class="reels" id="reels">
+            {% for i in range(5) %}
+            <div class="reel-slot">
+              <div class="reel" data-reel="{{ i }}" aria-label="Reel {{ i + 1 }}"></div>
             </div>
+            {% endfor %}
           </div>
-          {% endfor %}
+          <div class="reels__payline" aria-hidden="true"></div>
         </div>
-      </div>
 
-      <div class="machine__controls">
-        <form id="player-form" class="player-form">
-          <h2 class="player-form__title">Enter to play</h2>
-          <div class="player-form__fields">
-            <label>
-              <span>First name</span>
-              <input name="first_name" type="text" required autocomplete="given-name">
-            </label>
-            <label>
-              <span>Last name</span>
-              <input name="last_name" type="text" required autocomplete="family-name">
-            </label>
-            <label>
-              <span>Email</span>
-              <input name="email" type="email" required autocomplete="email">
-            </label>
-          </div>
-          <p class="form-error" id="form-error" hidden></p>
-          <button class="btn btn--primary" id="spin-btn" type="submit">Pull to Spin</button>
-        </form>
-      </div>
-    </section>
-  </main>
+        <div class="machine__controls">
+          <form id="player-form" class="player-form">
+            <h2 class="player-form__title">Enter to play</h2>
+            <div class="player-form__fields">
+              <label>
+                <span>First name</span>
+                <input name="first_name" type="text" required autocomplete="given-name">
+              </label>
+              <label>
+                <span>Last name</span>
+                <input name="last_name" type="text" required autocomplete="family-name">
+              </label>
+              <label>
+                <span>Email</span>
+                <input id="email-input" name="email" type="email" required autocomplete="email" placeholder="you@example.com">
+              </label>
+            </div>
+            <p class="form-error" id="form-error" hidden></p>
+            <button class="btn btn--primary btn--lever" id="spin-btn" type="submit" disabled>
+              <span class="btn__lever-knob" aria-hidden="true"></span>
+              Pull to Spin
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <div class="slot-cabinet__side slot-cabinet__side--right" aria-hidden="true"></div>
+    </div>
+
+    <div class="slot-cabinet__base" aria-hidden="true">
+      <div class="slot-cabinet__coin-tray"></div>
+    </div>
+  </div>
 
   <div class="result-banner" id="result-banner" hidden>
     <div class="result-banner__content">

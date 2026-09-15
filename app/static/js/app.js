@@ -1,14 +1,26 @@
 const symbols = window.SLOT_SYMBOLS || [];
-const { hydrateSymbolElements, renderSymbol } = window.SlotIcons;
+const { renderSymbol } = window.SlotIcons;
 
 const playerForm = document.getElementById("player-form");
+const emailInput = document.getElementById("email-input");
 const formError = document.getElementById("form-error");
 const spinBtn = document.getElementById("spin-btn");
 const resultBanner = document.getElementById("result-banner");
 const resultMessage = document.getElementById("result-message");
 const resultClose = document.getElementById("result-close");
 
+const REEL_SPIN_ITEMS = 18;
 let hasSpun = false;
+let isSpinning = false;
+
+function getSymbolPool() {
+  return symbols.length ? symbols : Object.keys(window.SlotIcons.ICONS);
+}
+
+function getReelItemHeight() {
+  const value = getComputedStyle(document.documentElement).getPropertyValue("--reel-item-height");
+  return Number.parseInt(value, 10) || 100;
+}
 
 function showError(message) {
   formError.textContent = message;
@@ -24,45 +36,108 @@ function getPlayerFromForm() {
   };
 }
 
-function setSpinningState(isSpinning) {
-  spinBtn.disabled = isSpinning || hasSpun;
-  playerForm.querySelectorAll("input").forEach((input) => {
-    input.disabled = isSpinning || hasSpun;
-  });
+function hasValidEmail() {
+  const email = (emailInput.value || "").trim();
+  return email.length > 0 && emailInput.checkValidity();
 }
 
-function buildReelStrip(finalSymbol) {
+function updateSpinButton() {
+  spinBtn.disabled = isSpinning || hasSpun || !hasValidEmail();
+}
+
+function setSpinningState(spinning) {
+  isSpinning = spinning;
+  playerForm.querySelectorAll("input").forEach((input) => {
+    input.disabled = spinning || hasSpun;
+  });
+  updateSpinButton();
+}
+
+function createSymbolCell(symbolName) {
+  const cell = document.createElement("div");
+  cell.className = "reel__symbol";
+  cell.innerHTML = renderSymbol(symbolName);
+  return cell;
+}
+
+function showIdleSymbol(reel, symbolName) {
+  reel.classList.remove("is-spinning");
+  reel.innerHTML = "";
+
+  const strip = document.createElement("div");
+  strip.className = "reel__strip reel__strip--idle";
+  strip.appendChild(createSymbolCell(symbolName));
+  reel.appendChild(strip);
+}
+
+function buildSpinStrip(finalSymbol) {
+  const pool = getSymbolPool();
   const strip = document.createElement("div");
   strip.className = "reel__strip";
+  const sequence = [];
 
-  const fillerPool = symbols.length ? symbols : Object.keys(window.SlotIcons.ICONS);
-  for (let i = 0; i < 12; i += 1) {
-    const symbol = i === 11 ? finalSymbol : fillerPool[Math.floor(Math.random() * fillerPool.length)];
-    const cell = document.createElement("div");
-    cell.className = "reel__symbol";
-    cell.innerHTML = renderSymbol(symbol);
-    strip.appendChild(cell);
+  for (let i = 0; i < REEL_SPIN_ITEMS - 1; i += 1) {
+    sequence.push(pool[Math.floor(Math.random() * pool.length)]);
   }
+  sequence.push(finalSymbol);
+
+  sequence.forEach((symbolName) => {
+    strip.appendChild(createSymbolCell(symbolName));
+  });
+
   return strip;
 }
 
-function setReelFinal(reel, finalSymbol, delayMs) {
+function startReelCycle(reel) {
+  const pool = getSymbolPool();
+  reel.classList.add("is-spinning");
+  reel.innerHTML = "";
+
+  const strip = document.createElement("div");
+  strip.className = "reel__strip reel__strip--cycle";
+
+  for (let i = 0; i < pool.length * 3; i += 1) {
+    strip.appendChild(createSymbolCell(pool[i % pool.length]));
+  }
+
+  reel.appendChild(strip);
+}
+
+function spinReelTo(reel, finalSymbol, stopDelayMs) {
   return new Promise((resolve) => {
-    reel.classList.add("spinning");
     setTimeout(() => {
-      reel.classList.remove("spinning");
+      const itemHeight = getReelItemHeight();
+      const strip = buildSpinStrip(finalSymbol);
+      const finalOffset = (strip.children.length - 1) * itemHeight;
+
+      reel.classList.remove("is-spinning");
       reel.innerHTML = "";
-      const strip = buildReelStrip(finalSymbol);
-      strip.style.transform = "translateY(-968px)";
       reel.appendChild(strip);
-      resolve();
-    }, delayMs);
+
+      requestAnimationFrame(() => {
+        strip.style.transition = "transform 1.1s cubic-bezier(0.2, 0.85, 0.3, 1)";
+        strip.style.transform = `translate3d(0, -${finalOffset}px, 0)`;
+      });
+
+      let finished = false;
+      const finish = () => {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        showIdleSymbol(reel, finalSymbol);
+        resolve();
+      };
+
+      strip.addEventListener("transitionend", finish, { once: true });
+      setTimeout(finish, 1400);
+    }, stopDelayMs);
   });
 }
 
 async function animateReels(finalReels) {
   const reels = [...document.querySelectorAll(".reel")];
-  const tasks = reels.map((reel, index) => setReelFinal(reel, finalReels[index], 900 + index * 250));
+  const tasks = reels.map((reel, index) => spinReelTo(reel, finalReels[index], 400 + index * 280));
   await Promise.all(tasks);
 }
 
@@ -74,13 +149,22 @@ function showResult(message, isWinner) {
 
 playerForm.addEventListener("input", () => {
   showError("");
+  updateSpinButton();
 });
+
+emailInput.addEventListener("change", updateSpinButton);
 
 playerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   showError("");
 
   if (hasSpun) {
+    return;
+  }
+
+  if (!hasValidEmail()) {
+    showError("Enter a valid email address to spin.");
+    emailInput.focus();
     return;
   }
 
@@ -92,6 +176,8 @@ playerForm.addEventListener("submit", async (event) => {
   const player = getPlayerFromForm();
   setSpinningState(true);
 
+  document.querySelectorAll(".reel").forEach((reel) => startReelCycle(reel));
+
   try {
     const response = await fetch("/api/spin", {
       method: "POST",
@@ -99,7 +185,13 @@ playerForm.addEventListener("submit", async (event) => {
       body: JSON.stringify(player),
     });
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("Unexpected server response. Please try again.");
+    }
+
     if (!response.ok) {
       throw new Error(data.detail || "Unable to spin right now.");
     }
@@ -114,6 +206,10 @@ playerForm.addEventListener("submit", async (event) => {
       setSpinningState(true);
     }
   } catch (error) {
+    document.querySelectorAll(".reel").forEach((reel, index) => {
+      const pool = getSymbolPool();
+      showIdleSymbol(reel, pool[index % pool.length]);
+    });
     setSpinningState(false);
     showError(error.message);
   }
@@ -124,11 +220,11 @@ resultClose.addEventListener("click", () => {
 });
 
 function initPage() {
-  hydrateSymbolElements();
-  document.querySelectorAll(".reel").forEach((reel) => {
-    reel.innerHTML = "";
-    reel.appendChild(buildReelStrip("rhel"));
+  const pool = getSymbolPool();
+  document.querySelectorAll(".reel").forEach((reel, index) => {
+    showIdleSymbol(reel, pool[index % pool.length]);
   });
+  updateSpinButton();
 }
 
 if (document.readyState === "loading") {
@@ -136,3 +232,11 @@ if (document.readyState === "loading") {
 } else {
   initPage();
 }
+
+window.addEventListener("orientationchange", () => {
+  window.setTimeout(() => {
+    if (!isSpinning) {
+      initPage();
+    }
+  }, 150);
+});
