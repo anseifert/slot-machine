@@ -21,6 +21,7 @@
   --shadow: 0 12px 40px rgba(238, 0, 0, 0.12);
   --radius: 18px;
   --reel-item-height: 100px;
+  --reel-cycle-duration: 0.7s;
 }
 
 * {
@@ -299,7 +300,7 @@ body:has(.vegas-floor) {
 }
 
 .reel__strip--cycle {
-  animation: reel-cycle 0.45s linear infinite;
+  animation: reel-cycle var(--reel-cycle-duration) linear infinite;
 }
 
 @keyframes reel-cycle {

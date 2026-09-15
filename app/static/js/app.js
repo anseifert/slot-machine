@@ -26,9 +26,21 @@
   let resultMessage;
   let resultClose;
 
-  const REEL_SPIN_ITEMS = 18;
+  const REEL_SPIN_ITEMS = 24;
+  const SPIN_TIMING = {
+    minSpinMs: 2200,
+    reelStopBaseMs: 900,
+    reelStopStaggerMs: 500,
+    reelLandMs: 2200,
+  };
   let hasSpun = false;
   let isSpinning = false;
+
+  function wait(ms) {
+    return new Promise((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
+  }
 
   function getReelItemHeight(reel) {
     if (reel && reel.clientHeight) {
@@ -153,7 +165,7 @@
         strip.style.transform = "translate3d(0, 0, 0)";
 
         requestAnimationFrame(() => {
-          strip.style.transition = "transform 1.1s cubic-bezier(0.2, 0.85, 0.3, 1)";
+          strip.style.transition = `transform ${SPIN_TIMING.reelLandMs}ms cubic-bezier(0.12, 0.85, 0.22, 1)`;
           strip.style.transform = `translate3d(0, -${finalOffset}px, 0)`;
         });
 
@@ -168,14 +180,20 @@
         };
 
         strip.addEventListener("transitionend", finish, { once: true });
-        window.setTimeout(finish, 1500);
+        window.setTimeout(finish, SPIN_TIMING.reelLandMs + 250);
       }, stopDelayMs);
     });
   }
 
   async function animateReels(finalReels) {
     const reels = [...document.querySelectorAll(".reel")];
-    const tasks = reels.map((reel, index) => spinReelTo(reel, finalReels[index], 350 + index * 250));
+    const tasks = reels.map(
+      (reel, index) => spinReelTo(
+        reel,
+        finalReels[index],
+        SPIN_TIMING.reelStopBaseMs + index * SPIN_TIMING.reelStopStaggerMs,
+      ),
+    );
     await Promise.all(tasks);
   }
 
@@ -203,6 +221,7 @@
     }
 
     const player = getPlayerFromForm();
+    const spinStartedAt = Date.now();
     setSpinningState(true);
     document.querySelectorAll(".reel").forEach((reel) => startReelCycle(reel));
 
@@ -223,6 +242,11 @@
       if (!response.ok) {
         const detail = typeof data.detail === "string" ? data.detail : "Unable to spin right now.";
         throw new Error(detail);
+      }
+
+      const elapsed = Date.now() - spinStartedAt;
+      if (elapsed < SPIN_TIMING.minSpinMs) {
+        await wait(SPIN_TIMING.minSpinMs - elapsed);
       }
 
       await animateReels(data.reels);
