@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import SESSION_COOKIE, create_session_token, require_admin, verify_credentials
 from app.config import get_settings
-from app.database import get_db, init_db
+from app.database import get_db, init_db, migrate_db
 from app.game import FILLER_SYMBOLS, PRIZE_SYMBOLS
 from app.models import Spin
 from app.schemas import SpinRequest
@@ -25,6 +25,7 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
+    migrate_db()
 
 
 @app.get("/health")
@@ -88,8 +89,12 @@ def admin_stats(
     _: str = Depends(require_admin),
 ) -> HTMLResponse:
     settings = get_settings()
-    total_spins = db.scalar(select(func.count()).select_from(Spin)) or 0
-    total_winners = db.scalar(select(func.count()).select_from(Spin).where(Spin.is_winner.is_(True))) or 0
+    total_spins = db.scalar(
+        select(func.count()).select_from(Spin).where(Spin.is_test.is_(False))
+    ) or 0
+    total_winners = db.scalar(
+        select(func.count()).select_from(Spin).where(Spin.is_winner.is_(True), Spin.is_test.is_(False))
+    ) or 0
     golf_wins = count_prize_wins(db, "golf_ball")
     hat_wins = count_prize_wins(db, "hat")
     recent_spins = db.scalars(select(Spin).order_by(Spin.created_at.desc()).limit(50)).all()

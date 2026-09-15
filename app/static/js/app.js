@@ -18,19 +18,17 @@ function showError(message) {
 function getPlayerFromForm() {
   const formData = new FormData(playerForm);
   return {
-    first_name: formData.get("first_name").trim(),
-    last_name: formData.get("last_name").trim(),
-    email: formData.get("email").trim().toLowerCase(),
+    first_name: (formData.get("first_name") || "").toString().trim(),
+    last_name: (formData.get("last_name") || "").toString().trim(),
+    email: (formData.get("email") || "").toString().trim().toLowerCase(),
   };
 }
 
-function isFormComplete() {
-  const player = getPlayerFromForm();
-  return Boolean(player.first_name && player.last_name && player.email);
-}
-
-function updateSpinButton() {
-  spinBtn.disabled = hasSpun || !isFormComplete();
+function setSpinningState(isSpinning) {
+  spinBtn.disabled = isSpinning || hasSpun;
+  playerForm.querySelectorAll("input").forEach((input) => {
+    input.disabled = isSpinning || hasSpun;
+  });
 }
 
 function buildReelStrip(finalSymbol) {
@@ -76,18 +74,23 @@ function showResult(message, isWinner) {
 
 playerForm.addEventListener("input", () => {
   showError("");
-  updateSpinButton();
 });
 
 playerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (hasSpun || !isFormComplete()) {
+  showError("");
+
+  if (hasSpun) {
+    return;
+  }
+
+  if (!playerForm.checkValidity()) {
+    playerForm.reportValidity();
     return;
   }
 
   const player = getPlayerFromForm();
-  spinBtn.disabled = true;
-  showError("");
+  setSpinningState(true);
 
   try {
     const response = await fetch("/api/spin", {
@@ -103,13 +106,16 @@ playerForm.addEventListener("submit", async (event) => {
 
     await animateReels(data.reels);
     showResult(data.message, data.is_winner);
-    hasSpun = true;
-    playerForm.querySelectorAll("input").forEach((input) => {
-      input.disabled = true;
-    });
+
+    if (data.is_test) {
+      setSpinningState(false);
+    } else {
+      hasSpun = true;
+      setSpinningState(true);
+    }
   } catch (error) {
+    setSpinningState(false);
     showError(error.message);
-    updateSpinButton();
   }
 });
 
@@ -117,11 +123,16 @@ resultClose.addEventListener("click", () => {
   resultBanner.hidden = true;
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+function initPage() {
   hydrateSymbolElements();
   document.querySelectorAll(".reel").forEach((reel) => {
     reel.innerHTML = "";
     reel.appendChild(buildReelStrip("rhel"));
   });
-  updateSpinButton();
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initPage);
+} else {
+  initPage();
+}

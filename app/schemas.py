@@ -15,6 +15,7 @@ class SpinResponse(BaseModel):
     prize_type: str | None
     outcome: str
     message: str
+    is_test: bool = False
 
 
 class SpinRecord(BaseModel):

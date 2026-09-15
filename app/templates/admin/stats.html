@@ -42,6 +42,7 @@
           <th>Time</th>
           <th>Name</th>
           <th>Email</th>
+          <th>Type</th>
           <th>Outcome</th>
           <th>Prize</th>
           <th>Reels</th>
@@ -49,17 +50,18 @@
       </thead>
       <tbody>
         {% for spin in recent_spins %}
-        <tr class="{% if spin.is_winner %}row-winner{% endif %}">
+        <tr class="{% if spin.is_winner and not spin.is_test %}row-winner{% endif %}">
           <td>{{ spin.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
           <td>{{ spin.first_name }} {{ spin.last_name }}</td>
           <td>{{ spin.email }}</td>
+          <td>{% if spin.is_test %}Test{% else %}Live{% endif %}</td>
           <td>{{ spin.outcome.replace('_', ' ') }}</td>
           <td>{% if spin.prize_type %}{{ spin.prize_type.replace('_', ' ') }}{% else %}—{% endif %}</td>
           <td>{{ spin.reels | join(', ') }}</td>
         </tr>
         {% else %}
         <tr>
-          <td colspan="6">No spins yet.</td>
+          <td colspan="7">No spins yet.</td>
         </tr>
         {% endfor %}
       </tbody>
