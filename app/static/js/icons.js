@@ -1,7 +1,7 @@
 const ICONS = {
   golf_ball: `
     <svg viewBox="0 0 64 64" aria-hidden="true">
-      <circle cx="32" cy="32" r="28" fill="#ffffff" stroke="#c7c7c7" stroke-width="2"/>
+      <circle cx="32" cy="32" r="28" fill="#f5f5f5" stroke="#707070" stroke-width="2"/>
       <circle cx="22" cy="24" r="2.2" fill="#e0e0e0"/>
       <circle cx="32" cy="18" r="2.2" fill="#e0e0e0"/>
       <circle cx="42" cy="24" r="2.2" fill="#e0e0e0"/>
