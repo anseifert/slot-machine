@@ -95,9 +95,22 @@
       return;
     }
     playerForm.querySelectorAll("input").forEach((input) => {
-      input.disabled = spinning || (hasSpun && !isTestEmail());
+      input.disabled = spinning;
     });
     updateSpinButton();
+  }
+
+  function resetForNextPlayer() {
+    hasSpun = false;
+    isSpinning = false;
+    showError("");
+    playerForm.reset();
+    playerForm.querySelectorAll("input").forEach((input) => {
+      input.disabled = false;
+    });
+    resultBanner.hidden = true;
+    updateSpinButton();
+    renderReels();
   }
 
   function createSymbolCell(symbolName) {
@@ -252,13 +265,8 @@
       await animateReels(data.reels);
       showResult(data.message, data.is_winner);
 
-      if (data.is_test) {
-        hasSpun = false;
-        setSpinningState(false);
-      } else {
-        hasSpun = true;
-        setSpinningState(true);
-      }
+      hasSpun = !data.is_test;
+      setSpinningState(false);
     } catch (error) {
       const pool = getSymbolPool();
       document.querySelectorAll(".reel").forEach((reel, index) => {
@@ -310,7 +318,7 @@
 
     if (resultClose) {
       resultClose.addEventListener("click", () => {
-        resultBanner.hidden = true;
+        resetForNextPlayer();
       });
     }
   }
