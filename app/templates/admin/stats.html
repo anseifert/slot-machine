@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Admin Stats — Red Hat Casino{% endblock %}
+{% block body %}
+<div class="admin-page admin-page--wide">
+  <header class="admin-header">
+    <div>
+      <h1>Red Hat Casino — Stats</h1>
+      <p class="admin-card__subtitle">Read-only prize and spin dashboard</p>
+    </div>
+    <div class="admin-header__actions">
+      <a class="btn btn--ghost" href="/">View casino</a>
+      <a class="btn btn--ghost" href="/admin/logout">Log out</a>
+    </div>
+  </header>
+
+  <section class="stats-grid">
+    <article class="stat-card">
+      <h2>Total Spins</h2>
+      <p class="stat-card__value">{{ total_spins }}</p>
+    </article>
+    <article class="stat-card">
+      <h2>Total Winners</h2>
+      <p class="stat-card__value">{{ total_winners }}</p>
+    </article>
+    <article class="stat-card stat-card--golf">
+      <h2>Golf Ball Prizes</h2>
+      <p class="stat-card__value">{{ golf_wins }} / {{ golf_max }}</p>
+      <p class="stat-card__meta">{{ golf_remaining }} remaining</p>
+    </article>
+    <article class="stat-card stat-card--hat">
+      <h2>Hat Prizes</h2>
+      <p class="stat-card__value">{{ hat_wins }} / {{ hat_max }}</p>
+      <p class="stat-card__meta">{{ hat_remaining }} remaining</p>
+    </article>
+  </section>
+
+  <section class="admin-table-wrap">
+    <h2>Recent Spins (last 50)</h2>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Outcome</th>
+          <th>Prize</th>
+          <th>Reels</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for spin in recent_spins %}
+        <tr class="{% if spin.is_winner %}row-winner{% endif %}">
+          <td>{{ spin.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>{{ spin.first_name }} {{ spin.last_name }}</td>
+          <td>{{ spin.email }}</td>
+          <td>{{ spin.outcome.replace('_', ' ') }}</td>
+          <td>{% if spin.prize_type %}{{ spin.prize_type.replace('_', ' ') }}{% else %}—{% endif %}</td>
+          <td>{{ spin.reels | join(', ') }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6">No spins yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}

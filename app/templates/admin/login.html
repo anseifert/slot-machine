@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Admin Login — Red Hat Casino{% endblock %}
+{% block body %}
+<div class="admin-page">
+  <div class="admin-card">
+    <h1>Red Hat Casino</h1>
+    <p class="admin-card__subtitle">Admin login</p>
+    {% if error %}
+    <div class="alert alert--error">{{ error }}</div>
+    {% endif %}
+    <form method="post" class="player-form">
+      <label>
+        <span>Username</span>
+        <input name="username" type="text" required autocomplete="username">
+      </label>
+      <label>
+        <span>Password</span>
+        <input name="password" type="password" required autocomplete="current-password">
+      </label>
+      <button class="btn btn--primary" type="submit">Sign in</button>
+    </form>
+    <a class="admin-link" href="/">← Back to casino</a>
+  </div>
+</div>
+{% endblock %}
