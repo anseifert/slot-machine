@@ -307,10 +307,25 @@
     });
   }
 
+  function scrollInputIntoView(input) {
+    if (!input || window.matchMedia("(pointer: coarse)").matches !== true) {
+      return;
+    }
+    window.setTimeout(() => {
+      input.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 300);
+  }
+
   function bindEvents() {
     playerForm.addEventListener("input", () => {
       showError("");
       updateSpinButton();
+    });
+
+    playerForm.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("focus", () => {
+        scrollInputIntoView(input);
+      });
     });
 
     emailInput.addEventListener("change", updateSpinButton);

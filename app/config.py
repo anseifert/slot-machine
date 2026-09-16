@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     golf_ball_odds: int = 30
     hat_odds: int = 30
     test_spin_emails: str = "aseifert@redhat.com"
+    timezone: str = "America/Chicago"
 
     @model_validator(mode="after")
     def assemble_database_url(self) -> "Settings":

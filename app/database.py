@@ -26,6 +26,11 @@ def get_db() -> Generator[Session, None, None]:
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
 
+    from app.casino_settings import seed_casino_settings_if_missing
+
+    with SessionLocal() as db:
+        seed_casino_settings_if_missing(db)
+
 
 def migrate_db() -> None:
     from sqlalchemy import text
@@ -33,3 +38,22 @@ def migrate_db() -> None:
     with engine.begin() as conn:
         conn.execute(text("ALTER TABLE spins ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE"))
         conn.execute(text("ALTER TABLE spins DROP CONSTRAINT IF EXISTS spins_email_key"))
+        conn.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS casino_settings (
+                    id INTEGER PRIMARY KEY,
+                    golf_ball_odds INTEGER NOT NULL DEFAULT 30,
+                    hat_odds INTEGER NOT NULL DEFAULT 30,
+                    total_odds_weight INTEGER NOT NULL DEFAULT 700,
+                    updated_by VARCHAR(100) NOT NULL DEFAULT 'system',
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+                """
+            )
+        )
+
+    from app.casino_settings import seed_casino_settings_if_missing
+
+    with SessionLocal() as db:
+        seed_casino_settings_if_missing(db)

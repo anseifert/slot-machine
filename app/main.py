@@ -14,10 +14,12 @@ from app.auth import (
     require_admin,
     verify_credentials,
 )
+from app.casino_settings import ensure_casino_settings, get_runtime_odds, update_runtime_odds
 from app.config import get_settings
 from app.database import get_db, init_db, migrate_db
 from app.game import FILLER_SYMBOLS, PRIZE_SYMBOLS
 from app.models import Spin
+from app.spin_period import format_reset_time, get_current_period_start, get_next_period_reset
 from app.schemas import SpinRequest
 from app.services import SpinError, count_prize_wins, perform_spin
 
@@ -103,8 +105,14 @@ def admin_stats(
     request: Request,
     db: Session = Depends(get_db),
     _: str = Depends(require_admin),
+    saved: str | None = None,
+    error: str | None = None,
 ) -> HTMLResponse:
     settings = get_settings()
+    odds = get_runtime_odds(db)
+    casino_settings = ensure_casino_settings(db)
+    period_start = get_current_period_start(tz_name=settings.timezone)
+    next_reset = get_next_period_reset(tz_name=settings.timezone)
     total_spins = db.scalar(
         select(func.count()).select_from(Spin).where(Spin.is_test.is_(False))
     ) or 0
@@ -128,5 +136,42 @@ def admin_stats(
             "hat_max": settings.hat_max,
             "hat_remaining": settings.hat_max - hat_wins,
             "recent_spins": recent_spins,
+            "golf_ball_odds": odds.golf_ball_odds,
+            "hat_odds": odds.hat_odds,
+            "total_odds_weight": odds.total_odds_weight,
+            "odds_updated_at": casino_settings.updated_at,
+            "odds_updated_by": casino_settings.updated_by,
+            "timezone": settings.timezone,
+            "period_start_label": format_reset_time(period_start, settings.timezone),
+            "next_reset_label": format_reset_time(next_reset, settings.timezone),
+            "saved": saved == "1",
+            "error": error,
         },
     )
+
+
+@app.post("/admin/settings")
+def admin_update_settings(
+    db: Session = Depends(get_db),
+    admin: str = Depends(require_admin),
+    golf_ball_odds: int = Form(...),
+    hat_odds: int = Form(...),
+    total_odds_weight: int = Form(...),
+) -> Response:
+    try:
+        update_runtime_odds(
+            db,
+            golf_ball_odds=golf_ball_odds,
+            hat_odds=hat_odds,
+            total_odds_weight=total_odds_weight,
+            updated_by=admin,
+        )
+    except ValueError as exc:
+        from urllib.parse import quote
+
+        return RedirectResponse(
+            url=f"/admin/stats?error={quote(str(exc))}",
+            status_code=303,
+        )
+
+    return RedirectResponse(url="/admin/stats?saved=1", status_code=303)

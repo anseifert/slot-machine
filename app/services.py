@@ -1,10 +1,12 @@
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
+from app.casino_settings import get_runtime_odds
 from app.config import get_settings
 from app.game import Outcome, outcome_message, roll_outcome
 from app.models import Spin
 from app.schemas import SpinRequest, SpinResponse
+from app.spin_period import get_current_period_start
 
 
 class SpinError(Exception):
@@ -38,23 +40,31 @@ def perform_spin(db: Session, payload: SpinRequest) -> SpinResponse:
     is_test = is_test_spin_email(email)
 
     if not is_test:
+        period_start = get_current_period_start(tz_name=settings.timezone)
         existing = db.scalar(
-            select(Spin).where(Spin.email == email, Spin.is_test.is_(False))
+            select(Spin.id)
+            .where(
+                Spin.email == email,
+                Spin.is_test.is_(False),
+                Spin.created_at >= period_start,
+            )
+            .limit(1)
         )
         if existing:
-            raise SpinError("This email address has already been used to spin.", status_code=409)
+            raise SpinError("Oh no! Your out of spins!", status_code=409)
 
     db.execute(text("SELECT pg_advisory_xact_lock(424242)"))
 
     golf_remaining = settings.golf_ball_max - count_prize_wins(db, "golf_ball")
     hat_remaining = settings.hat_max - count_prize_wins(db, "hat")
 
+    odds = get_runtime_odds(db)
     outcome, reels, is_winner, prize_type = roll_outcome(
         golf_remaining=golf_remaining,
         hat_remaining=hat_remaining,
-        golf_odds=settings.golf_ball_odds,
-        hat_odds=settings.hat_odds,
-        total_weight=settings.total_odds_weight,
+        golf_odds=odds.golf_ball_odds,
+        hat_odds=odds.hat_odds,
+        total_weight=odds.total_odds_weight,
     )
 
     if is_winner and prize_type and not is_test:

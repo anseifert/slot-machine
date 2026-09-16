@@ -4,14 +4,66 @@
 <div class="admin-page admin-page--wide">
   <header class="admin-header">
     <div>
-      <h1>Red Hat Casino — Stats</h1>
-      <p class="admin-card__subtitle">Read-only prize and spin dashboard</p>
+      <h1>Red Hat Casino — Admin</h1>
+      <p class="admin-card__subtitle">Prize inventory, odds, and spin dashboard</p>
     </div>
     <div class="admin-header__actions">
       <a class="btn btn--ghost" href="/">View casino</a>
       <a class="btn btn--ghost" href="/admin/logout">Log out</a>
     </div>
   </header>
+
+  {% if saved %}
+  <div class="alert alert--success">Odds updated successfully.</div>
+  {% endif %}
+  {% if error %}
+  <div class="alert alert--error">{{ error }}</div>
+  {% endif %}
+
+  <section class="admin-settings">
+    <div class="admin-settings__header">
+      <h2>Spin Odds</h2>
+      <p class="admin-card__subtitle">
+        Last updated {{ odds_updated_at.strftime('%Y-%m-%d %H:%M') }} by {{ odds_updated_by }}
+      </p>
+    </div>
+    <form method="post" action="/admin/settings" class="admin-settings__form">
+      <label>
+        <span>Golf ball odds</span>
+        <input name="golf_ball_odds" type="number" min="0" required value="{{ golf_ball_odds }}">
+      </label>
+      <label>
+        <span>Hat odds</span>
+        <input name="hat_odds" type="number" min="0" required value="{{ hat_odds }}">
+      </label>
+      <label>
+        <span>Total odds weight</span>
+        <input name="total_odds_weight" type="number" min="1" required value="{{ total_odds_weight }}">
+      </label>
+      <button class="btn btn--primary" type="submit">Save odds</button>
+    </form>
+    <p class="admin-settings__hint">
+      Each spin rolls from 0 to (total weight − 1). Golf wins on rolls below golf odds; hat wins on the next band.
+      Golf + hat odds must not exceed the total weight.
+    </p>
+  </section>
+
+  <section class="admin-settings admin-settings--info">
+    <h2>Spin Period Reset</h2>
+    <p class="admin-settings__meta">
+      Timezone: <strong>{{ timezone }}</strong>
+    </p>
+    <p class="admin-settings__meta">
+      Current period started: <strong>{{ period_start_label }}</strong>
+    </p>
+    <p class="admin-settings__meta">
+      Next reset (players can spin again): <strong>{{ next_reset_label }}</strong>
+    </p>
+    <p class="admin-settings__hint">
+      Each email gets one live spin per period. Resets happen at 12:00 AM and 12:00 PM daily.
+      Past spins and captured emails are kept — only the per-period limit resets.
+    </p>
+  </section>
 
   <section class="stats-grid">
     <article class="stat-card">
