@@ -8,6 +8,7 @@
       <p class="admin-card__subtitle">Prize inventory, odds, and spin dashboard</p>
     </div>
     <div class="admin-header__actions">
+      <a class="btn btn--primary" href="/admin/export/emails">Download emails</a>
       <a class="btn btn--ghost" href="/">View casino</a>
       <a class="btn btn--ghost" href="/admin/logout">Log out</a>
     </div>
@@ -87,7 +88,10 @@
   </section>
 
   <section class="admin-table-wrap">
-    <h2>Recent Spins (last 50)</h2>
+    <div class="admin-table-wrap__header">
+      <h2>Recent Spins (last 50)</h2>
+      <a class="btn btn--ghost btn--small" href="/admin/export/emails">Export all emails (CSV)</a>
+    </div>
     <table class="admin-table">
       <thead>
         <tr>

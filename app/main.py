@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
@@ -21,7 +22,7 @@ from app.game import FILLER_SYMBOLS, PRIZE_SYMBOLS
 from app.models import Spin
 from app.spin_period import format_reset_time, get_current_period_start, get_next_period_reset
 from app.schemas import SpinRequest
-from app.services import SpinError, count_prize_wins, perform_spin
+from app.services import SpinError, build_spins_csv, count_prize_wins, perform_spin
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -175,3 +176,17 @@ def admin_update_settings(
         )
 
     return RedirectResponse(url="/admin/stats?saved=1", status_code=303)
+
+
+@app.get("/admin/export/emails")
+def admin_export_emails(
+    db: Session = Depends(get_db),
+    _: str = Depends(require_admin),
+) -> Response:
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    filename = f"red-hat-casino-emails-{timestamp}.csv"
+    return Response(
+        content=build_spins_csv(db),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

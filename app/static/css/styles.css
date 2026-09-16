@@ -639,6 +639,24 @@ body:has(.admin-page) {
   padding: 1rem 1.25rem 1.25rem;
 }
 
+.admin-table-wrap__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.admin-table-wrap__header h2 {
+  margin: 0;
+}
+
+.btn--small {
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;

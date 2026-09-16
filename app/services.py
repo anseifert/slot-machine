@@ -1,3 +1,6 @@
+import csv
+import io
+
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
@@ -101,3 +104,29 @@ def perform_spin(db: Session, payload: SpinRequest) -> SpinResponse:
         message=message,
         is_test=is_test,
     )
+
+
+def build_spins_csv(db: Session, include_test: bool = False) -> str:
+    query = select(Spin).order_by(Spin.created_at.asc())
+    if not include_test:
+        query = query.where(Spin.is_test.is_(False))
+
+    spins = db.scalars(query).all()
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(["first_name", "last_name", "email", "spun_at", "winner", "prize", "outcome"])
+
+    for spin in spins:
+        writer.writerow(
+            [
+                spin.first_name,
+                spin.last_name,
+                spin.email,
+                spin.created_at.isoformat(),
+                "yes" if spin.is_winner else "no",
+                spin.prize_type or "",
+                spin.outcome,
+            ]
+        )
+
+    return buffer.getvalue()
